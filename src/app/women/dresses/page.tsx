@@ -1,5 +1,5 @@
-import { Header } from "../../components/Header";
-import { Footer } from "../../components/Footer";
+
+
 import { Breadcrumb } from "../../components/Breadcrumb";
 import { ProductImageGallery } from "../../components/ProductImageGallery";
 import { RatingStars } from "../../components/RatingStars";
@@ -88,7 +88,7 @@ export default function DressesPage() {
     <div className="flex flex-col items-start bg-white w-full min-h-screen">
       <div className="flex min-h-[800px] flex-col items-start self-stretch bg-neutral-50">
         <div className="flex flex-col items-start self-stretch">
-          <Header />
+         
 
           <div className="flex justify-center items-start px-40 py-5 flex-1 self-stretch max-md:px-5">
             <div className="flex max-w-[960px] flex-col items-start flex-1">
@@ -202,7 +202,7 @@ export default function DressesPage() {
         </div>
       </div>
 
-      <Footer />
+     
     </div>
   );
 }

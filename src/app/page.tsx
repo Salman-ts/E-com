@@ -1,11 +1,11 @@
 import * as React from "react";
-import { Header } from "./components/Header";
+
 import { HeroSection } from "./components/HeroSection";
 import { CategoryTabs } from "./components/CategoryTabs";
 import { ProductGrid } from "./components/ProductGrid";
 import { TestimonialsSection } from "./components/TestimonialsSection";
 import { NewsletterSection } from "./components/NewsletterSection";
-import { Footer } from "./components/Footer";
+
 
 
 
@@ -106,7 +106,7 @@ export default function StyleHubHomepage() {
   return (
     <div className="overflow-hidden bg-neutral-50 min-h-[800px]">
       <div className="w-full max-md:max-w-full">
-        <Header />
+      
 
         <main className="flex flex-1 justify-center items-start px-40 py-5 size-full max-md:px-5 max-md:max-w-full">
           <div className="overflow-hidden flex-1 shrink w-full basis-0 max-w-[960px] min-w-60 max-md:max-w-full">
@@ -151,7 +151,7 @@ export default function StyleHubHomepage() {
           </div>
         </main>
 
-        <Footer />
+       
       </div>
     </div>
   );
@@ -161,3 +161,4 @@ export default function StyleHubHomepage() {
 
 
 
+  

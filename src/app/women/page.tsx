@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
+
 import { FilterBar } from "../components/FilterBar";
 import { ProductSearchBar } from "../components/ProductSearchBar";
 import { WomensProductCard } from "../components/WomensProductCard";
@@ -74,7 +73,7 @@ export default function WomensClothingPage() {
   return (
     <div className="overflow-hidden bg-neutral-50 min-h-[800px]">
       <div className="w-full max-md:max-w-full">
-        <Header />
+     
 
         <main className="flex flex-1 justify-center items-start px-40 py-5 size-full max-md:px-5 max-md:max-w-full">
           <div className="overflow-hidden flex-1 shrink w-full basis-0 max-w-[960px] min-w-60 max-md:max-w-full">
@@ -137,7 +136,7 @@ export default function WomensClothingPage() {
           </div>
         </main>
 
-        <Footer />
+      
       </div>
     </div>
   );
