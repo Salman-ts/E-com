@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface Product {
   id: number;
@@ -39,24 +40,39 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
     fetchProduct();
   }, [params.id]);
-
-  const addToCart = (product: Product) => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const exists = cart.find((item: any) => item.id === product.id);
+ 
+  const addToCart = (product: Product | null) => {
+    if (!product) return; // Early return if product is null
     
-    if (exists) {
-      const updatedCart = cart.map((item: any) =>
+    // Get existing cart from localStorage
+    const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    // Check if product already exists in cart
+    const existingProduct = existingCart.find((item: any) => item.id === product.id);
+    
+    let updatedCart;
+    if (existingProduct) {
+      // If product exists, increase quantity
+      updatedCart = existingCart.map((item: any) => 
         item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
       );
-      localStorage.setItem('cart', JSON.stringify(updatedCart));
     } else {
-      localStorage.setItem('cart', JSON.stringify([...cart, { ...product, quantity: 1 }]));
+      // If product doesn't exist, add it with quantity 1
+      updatedCart = [...existingCart, { ...product, quantity: 1 }];
     }
-
+    
+    // Save updated cart to localStorage
+    localStorage.setItem('cart', JSON.stringify(updatedCart));
+    
     toast.success(`${product.title} added to cart!`, {
       position: 'top-right',
       autoClose: 3000,
     });
+    
+    // Optional: Redirect to cart page after short delay
+    // setTimeout(() => {
+    //   router.push('/product/cart');
+    // }, 1500);
   };
 
   if (loading) {
@@ -89,13 +105,22 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className="mb-6 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          ← Back
-        </button>
+        {/* Navigation Buttons */}
+        <div className="flex justify-between items-center mb-6">
+          <button
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            ← Back
+          </button>
+          
+          <button
+            onClick={() => router.push('/product/cart')}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+          >
+            <span>🛒</span> View Cart
+          </button>
+        </div>
 
         <div className="bg-white border-2 border-gray-400  rounded-2xl shadow-lg overflow-hidden">
           <div className="grid md:grid-cols-2 gap-8 p-8">
