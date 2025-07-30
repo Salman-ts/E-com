@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Circles } from 'react-loader-spinner';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { addToCart, removeFromCart, clearCart } from '../../store/slices/cartSlice';
 
 const ITEMS_PER_PAGE = 8;
-
 const Sal = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
@@ -14,19 +15,9 @@ const Sal = () => {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [cart, setCart] = useState<any[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-
-  // Load cart from localStorage
-  useEffect(() => {
-    const storedCart = localStorage.getItem('cart');
-    if (storedCart) setCart(JSON.parse(storedCart));
-  }, []);
-
-  // Sync cart to localStorage
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
+  const dispatch = useAppDispatch();
+  const cart = useAppSelector((state) => state.cart.items);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -41,6 +32,22 @@ const Sal = () => {
     };
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 1000) {
+        if (visibleProducts.length < filteredProducts.length) {
+          const nextPage = page + 1;
+          const newVisible = filteredProducts.slice(0, nextPage * ITEMS_PER_PAGE);
+          setVisibleProducts(newVisible);
+          setPage(nextPage);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [visibleProducts.length, filteredProducts.length, page]);
 
   const handleSearch = () => {
     const filtered = products.filter((product: any) =>
@@ -59,30 +66,20 @@ const Sal = () => {
     setPage(nextPage);
   };
 
-  const addToCart = (product: any) => {
-    setCart((prevCart) => {
-      const exists = prevCart.find((item) => item.id === product.id);
-      if (exists) {
-        return prevCart.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      } else {
-        return [...prevCart, { ...product, quantity: 1 }];
-      }
-    });
-
+  const handleAddToCart = (product: any) => {
+    dispatch(addToCart(product));
     toast.success(`${product.title} added to cart!`, {
       position: 'top-right',
       autoClose: 3000,
     });
   };
 
-  const removeFromCart = (productId: number) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+  const handleRemoveFromCart = (productId: number) => {
+    dispatch(removeFromCart(productId));
   };
 
-  const clearCart = () => {
-    setCart([]);
+  const handleClearCart = () => {
+    dispatch(clearCart());
   };
 
   return (
@@ -90,17 +87,25 @@ const Sal = () => {
       {/* Header */}
       <div className="flex justify-between items-center max-w-6xl mx-auto mb-10">
         <h1 className="text-4xl font-bold text-gray-800">Featured Products</h1>
-        <button
-          onClick={() => setIsCartOpen(true)}
-          className="relative px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300"
-        >
-          🛒 Cart
-          {cart.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full px-2 text-xs">
-              {cart.reduce((acc, item) => acc + item.quantity, 0)}
-            </span>
-          )}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => window.location.href = '/product/cart'}
+            className="relative px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300"
+          >
+            🛒 View Cart
+            {cart.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full px-2 text-xs">
+                {cart.reduce((acc, item) => acc + item.quantity, 0)}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300"
+          >
+            Quick View
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -152,7 +157,7 @@ const Sal = () => {
                     View Product
                   </button>
                   <button
-                    onClick={() => addToCart(item)}
+                    onClick={() => handleAddToCart(item)}
                     className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300"
                   >
                     Add to Cart
@@ -164,17 +169,7 @@ const Sal = () => {
         </div>
       )}
 
-      {/* Load More */}
-      {visibleProducts.length < filteredProducts.length && (
-        <div className="mt-10 text-center">
-          <button
-            onClick={loadMore}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300"
-          >
-            Load More
-          </button>
-        </div>
-      )}
+
 
       {/* Toast */}
       <ToastContainer />
@@ -216,7 +211,7 @@ const Sal = () => {
                   </div>
                   <button
                     onClick={() => {
-                      addToCart(selectedProduct);
+                      handleAddToCart(selectedProduct);
                       setSelectedProduct(null);
                     }}
                     className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300"
@@ -252,7 +247,7 @@ const Sal = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-gray-800 font-bold">${item.price * item.quantity}</span>
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => handleRemoveFromCart(item.id)}
                         className="text-red-500 hover:text-red-700"
                       >
                         ×
@@ -265,7 +260,7 @@ const Sal = () => {
                     Total: ${cart.reduce((sum, item) => sum + item.price * item.quantity, 0)}
                   </span>
                   <button
-                    onClick={clearCart}
+                    onClick={handleClearCart}
                     className="text-sm bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
                   >
                     Clear Cart

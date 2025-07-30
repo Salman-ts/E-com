@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
+import { ReduxProvider } from "../store/StoreProvider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -26,9 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${plusJakartaSans.variable} font-sans antialiased`}>
-        <Header />
-        {children}
-        <Footer />
+        <ReduxProvider>
+          <Header />
+          {children}
+          <Footer />
+        </ReduxProvider>
       </body>
     </html>
   );

@@ -1,100 +1,38 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-interface CartItem {
-  id: number;
-  title: string;
-  price: number;
-  thumbnail: string;
-  description: string;
-  brand: string;
-  category: string;
-  rating: number;
-  discountPercentage: number;
-  stock: number;
-  images: string[];
-  quantity: number;
-}
+import { toast, ToastContainer } from 'react-toastify';
+import { useAppSelector, useAppDispatch } from '../../../store/hooks';
+import { removeFromCart, updateQuantity, clearCart, setCart, CartItem } from '../../../store/slices/cartSlice';
 
 export default function CartPage() {
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<CartItem | null>(null);
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const cart = useAppSelector((state) => state.cart.items);
+  
+  // Debug: Log cart state
+  console.log('Cart items:', cart);
 
-  // Get cart items from localStorage or fetch from API
   useEffect(() => {
-    const loadCart = async () => {
-      try {
-        // Try to get cart from localStorage first
-        const storedCart = localStorage.getItem('cart');
-        
-        if (storedCart) {
-          // Use stored cart if available
-          setCart(JSON.parse(storedCart));
-        } else {
-          // Otherwise fetch selected products from API
-          // In a real app, you would fetch from your backend API
-          // For demo purposes, we'll fetch specific products
-          const productIds = [1, 5, 9]; // Example product IDs the user selected
-          
-          const fetchedItems = await Promise.all(
-            productIds.map(async (id) => {
-              const res = await fetch(`https://dummyjson.com/products/${id}`);
-              const product = await res.json();
-              return { ...product, quantity: 1 };
-            })
-          );
-          
-          setCart(fetchedItems);
-          // Save to localStorage
-          localStorage.setItem('cart', JSON.stringify(fetchedItems));
-        }
-      } catch (error) {
-        console.error('Error loading cart:', error);
-        toast.error('Failed to load cart items');
-      } finally {
-        setLoading(false);
-      }
-    };
+    console.log('Cart page loaded, cart items:', cart);
+    setLoading(false);
+  }, [cart]);
 
-    loadCart();
-  }, []);
-
-  const updateQuantity = (id: number, newQuantity: number) => {
+  const handleUpdateQuantity = (id: number, newQuantity: number) => {
     if (newQuantity < 1) return;
-    
-    setCart(prevCart => {
-      const updatedCart = prevCart.map(item => 
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      );
-      
-      // Save to localStorage
-      localStorage.setItem('cart', JSON.stringify(updatedCart));
-      return updatedCart;
-    });
-    
+    dispatch(updateQuantity({ id, quantity: newQuantity }));
     toast.success('Cart updated!');
   };
 
-  const removeItem = (id: number) => {
-    setCart(prevCart => {
-      const updatedCart = prevCart.filter(item => item.id !== id);
-      
-      // Save to localStorage
-      localStorage.setItem('cart', JSON.stringify(updatedCart));
-      return updatedCart;
-    });
-    
+  const handleRemoveItem = (id: number) => {
+    dispatch(removeFromCart(id));
     toast.success('Item removed from cart');
   };
 
-  const clearCart = () => {
-    setCart([]);
-    localStorage.removeItem('cart');
+  const handleClearCart = () => {
+    dispatch(clearCart());
     toast.success('Cart cleared');
   };
 
@@ -162,7 +100,7 @@ export default function CartPage() {
                             <div className="flex justify-between">
                               <h3 className="text-lg font-medium text-gray-800">{item.title}</h3>
                               <button 
-                                onClick={() => removeItem(item.id)}
+                                onClick={() => handleRemoveItem(item.id)}
                                 className="text-red-500 hover:text-red-700"
                               >
                                 ×
@@ -180,14 +118,14 @@ export default function CartPage() {
                             <div className="flex justify-between items-center mt-2">
                               <div className="flex items-center">
                                 <button 
-                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                                   className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm md:text-base"
                                 >
                                   -
                                 </button>
                                 <span className="mx-2 md:mx-3">{item.quantity}</span>
                                 <button 
-                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                                   className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm md:text-base"
                                 >
                                   +
@@ -195,7 +133,7 @@ export default function CartPage() {
                               </div>
                               
                               <div className="text-right">
-                                <div className="text-lg font-bold text-gray-900">${(item.price * item.quantity).toFixed(2)}</div>
+                                <div className="text-lg font-bold text-gray-900">${(item.price * item.quantity).toFixed()}</div>
                                 <div className="text-sm text-gray-500">${item.price} each</div>
                               </div>
                             </div>
@@ -313,7 +251,7 @@ export default function CartPage() {
                   </button>
                   
                   <button
-                    onClick={clearCart}
+                    onClick={handleClearCart}
                     className="w-full py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50"
                   >
                     Clear Cart
@@ -378,14 +316,14 @@ export default function CartPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                     <div className="flex items-center">
                       <button 
-                        onClick={() => updateQuantity(selectedItem.id, selectedItem.quantity - 1)}
+                        onClick={() => handleUpdateQuantity(selectedItem.id, selectedItem.quantity - 1)}
                         className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
                       >
                         -
                       </button>
                       <span className="mx-3">{selectedItem.quantity}</span>
                       <button 
-                        onClick={() => updateQuantity(selectedItem.id, selectedItem.quantity + 1)}
+                        onClick={() => handleUpdateQuantity(selectedItem.id, selectedItem.quantity + 1)}
                         className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
                       >
                         +
@@ -393,13 +331,10 @@ export default function CartPage() {
                     </div>
                     
                     <button
-                      onClick={() => {
-                        updateQuantity(selectedItem.id, selectedItem.quantity);
-                        setSelectedItem(null);
-                      }}
+                      onClick={() => setSelectedItem(null)}
                       className="w-full sm:flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
-                      Update Quantity
+                      Close
                     </button>
                   </div>
                 </div>
